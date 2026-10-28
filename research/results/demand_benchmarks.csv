@@ -1,0 +1,5 @@
+Model,MAE,RMSE,MAPE (%),R2 Score
+Linear Regression (Baseline),3.242,4.031,3.34,0.9939
+Ridge Regression (L2),3.242,4.031,3.34,0.9939
+Random Forest Regressor,4.295,5.466,4.2,0.9887
+Gradient Boosting (IntelliCart SOTA),3.977,4.923,3.86,0.9909

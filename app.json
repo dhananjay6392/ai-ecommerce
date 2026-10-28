@@ -1,0 +1,35 @@
+﻿{
+    "expo":  {
+                 "name":  "IntelliCart AI",
+                 "slug":  "intellicart-ai",
+                 "version":  "1.0.0",
+                 "orientation":  "portrait",
+                 "icon":  "./assets/icon.png",
+                 "userInterfaceStyle":  "dark",
+                 "newArchEnabled":  false,
+                 "splash":  {
+                                "image":  "./assets/splash-icon.png",
+                                "resizeMode":  "contain",
+                                "backgroundColor":  "#0B0F19"
+                            },
+                 "ios":  {
+                             "supportsTablet":  true,
+                             "bundleIdentifier":  "com.intellicart.ai"
+                         },
+                 "android":  {
+                                 "package":  "com.intellicart.ai",
+                                 "versionCode":  1,
+                                 "adaptiveIcon":  {
+                                                      "foregroundImage":  "./assets/android-icon-foreground.png",
+                                                      "backgroundColor":  "#0B0F19"
+                                                  },
+                                 "permissions":  [
+                                                     "INTERNET",
+                                                     "ACCESS_NETWORK_STATE"
+                                                 ]
+                             },
+                 "web":  {
+                             "favicon":  "./assets/icon.png"
+                         }
+             }
+}

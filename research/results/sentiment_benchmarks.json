@@ -1,0 +1,28 @@
+{
+  "accuracy": 0.9413,
+  "macro_precision": 0.9515,
+  "macro_recall": 0.9376,
+  "macro_f1": 0.9394,
+  "classes": [
+    "Positive",
+    "Neutral",
+    "Negative"
+  ],
+  "confusion_matrix": [
+    [
+      273,
+      0,
+      0
+    ],
+    [
+      0,
+      204,
+      47
+    ],
+    [
+      0,
+      0,
+      276
+    ]
+  ]
+}

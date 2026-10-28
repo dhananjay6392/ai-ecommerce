@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: intellicart-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - intellicart-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: intellicart-ml
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+    networks:
+      - intellicart-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: intellicart-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongodb:27017/intellicart_ai
+      - JWT_SECRET=super_secret_jwt_key_intellicart_2026_ieee
+      - JWT_EXPIRE=7d
+      - CLIENT_URL=http://localhost
+      - ML_SERVICE_URL=http://ml-service:8000
+      - RAZORPAY_KEY_ID=rzp_test_placeholder_key
+      - RAZORPAY_KEY_SECRET=placeholder_secret_key
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      ml-service:
+        condition: service_started
+    networks:
+      - intellicart-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: intellicart-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - intellicart-network
+
+networks:
+  intellicart-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
