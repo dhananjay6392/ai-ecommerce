@@ -432,3 +432,132 @@ exports.updateOrderStatus = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Get Sales Analytics and Dashboard Summary Metrics (Admin only)
+// @route   GET /api/admin/orders/analytics or GET /api/orders/analytics
+// @access  Private/Admin
+exports.getOrderAnalytics = async (req, res, next) => {
+  try {
+    const User = require('../models/User');
+    const totalOrders = await Order.countDocuments();
+    const totalCustomers = await User.countDocuments({ role: { $in: ['CUSTOMER', 'customer'] } });
+    const totalProducts = await Product.countDocuments();
+    const lowStockProducts = await Product.find({ stock: { $lte: 15 } })
+      .select('name brand stock price minSafetyStock reorderPoint thumbnail images')
+      .limit(10);
+    const lowStockCount = await Product.countDocuments({ stock: { $lte: 15 } });
+
+    // Aggregate total revenue from paid or non-cancelled orders
+    const revenueAgg = await Order.aggregate([
+      {
+        $match: {
+          $or: [
+            { paymentStatus: { $in: ['PAID', 'Paid'] } },
+            { paymentMethod: { $in: ['COD', 'cod'] }, orderStatus: { $in: ['CONFIRMED', 'DELIVERED', 'SHIPPED', 'Confirmed', 'Delivered', 'Shipped'] } },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$totalAmount' },
+          paidOrdersCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const totalRevenue = revenueAgg[0]?.totalRevenue || 0;
+
+    // Order status breakdown
+    const statusAgg = await Order.aggregate([
+      {
+        $group: {
+          _id: { $toUpper: '$orderStatus' },
+          count: { $sum: 1 },
+          totalValue: { $sum: '$totalAmount' },
+        },
+      },
+    ]);
+
+    const orderStatusDistribution = statusAgg.map((s) => ({
+      status: s._id,
+      count: s.count,
+      totalValue: Math.round(s.totalValue),
+    }));
+
+    // Revenue by Day for past 14 days
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+    const dailyRevenueAgg = await Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: fourteenDaysAgo },
+          $or: [
+            { paymentStatus: { $in: ['PAID', 'Paid'] } },
+            { paymentMethod: { $in: ['COD', 'cod'] }, orderStatus: { $nin: ['CANCELLED', 'Cancelled'] } },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+          },
+          revenue: { $sum: '$totalAmount' },
+          orders: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Fill all 14 days with 0 if no orders on that day
+    const dailyMap = new Map(dailyRevenueAgg.map((d) => [d._id, d]));
+    const revenueChart = [];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateKey = d.toISOString().split('T')[0];
+      const label = `${monthNames[d.getMonth()]} ${d.getDate()}`;
+      const found = dailyMap.get(dateKey);
+      revenueChart.push({
+        date: label,
+        rawDate: dateKey,
+        revenue: found ? Math.round(found.revenue) : 0,
+        orders: found ? found.orders : 0,
+      });
+    }
+
+    // Top selling products
+    const topProducts = await Product.find()
+      .select('name brand price stock salesCount averageRating thumbnail images')
+      .sort({ salesCount: -1 })
+      .limit(6);
+
+    // Recent orders
+    const recentOrders = await Order.find()
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 })
+      .limit(6);
+
+    res.status(200).json({
+      success: true,
+      summary: {
+        totalRevenue: Math.round(totalRevenue),
+        totalOrders,
+        totalCustomers,
+        totalProducts,
+        lowStockCount,
+      },
+      revenueChart,
+      orderStatusDistribution,
+      topProducts,
+      recentOrders,
+      lowStockAlerts: lowStockProducts,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+

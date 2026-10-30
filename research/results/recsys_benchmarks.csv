@@ -1,5 +1,5 @@
 Algorithm,Precision@5,Recall@5,Hit-Rate@5,MAP@5
-Random Selection (Baseline),0.378,0.2285,0.91,0.2525
+Random Selection (Baseline),0.376,0.2282,0.9,0.2478
 Popularity-Based Ranking,0.38,0.2301,0.91,0.2609
 Implicit Collaborative Filtering,0.408,0.2447,0.91,0.2722
 IntelliCart Hybrid Engine (Proposed),0.378,0.2287,0.91,0.2598

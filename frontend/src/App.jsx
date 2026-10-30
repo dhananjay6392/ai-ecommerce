@@ -136,6 +136,23 @@ function App() {
                     </AdminRoute>
                   }
                 />
+                <Route
+                  path="/admin/categories"
+                  element={
+                    <AdminRoute>
+                      <AdminDashboardPage />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/intelligence"
+                  element={
+                    <AdminRoute>
+                      <AdminDashboardPage />
+                    </AdminRoute>
+                  }
+                />
+
 
                 {/* 404 Catch-All */}
                 <Route path="*" element={<Navigate to="/" replace />} />

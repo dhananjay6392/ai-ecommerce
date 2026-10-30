@@ -47,8 +47,13 @@ api.interceptors.response.use(
       }
     }
 
-    const customMessage =
+    let customMessage =
       error.response?.data?.message || error.message || 'An unexpected error occurred.';
+
+    if (!error.response && (error.code === 'ERR_NETWORK' || error.message === 'Network Error')) {
+      customMessage = 'Unable to connect to the IntelliCart API server (http://localhost:5000). Please ensure the backend service is running.';
+    }
+
     const enhancedError = new Error(customMessage);
     enhancedError.status = error.response?.status;
     enhancedError.response = error.response;

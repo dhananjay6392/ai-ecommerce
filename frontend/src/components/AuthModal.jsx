@@ -156,14 +156,14 @@ export const AuthModal = () => {
 
           <div>
             <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
-              Password
+              {authModalTab === 'register' ? 'Password (Min. 8 Characters)' : 'Password'}
             </label>
             <div className="relative">
               <Lock className="absolute left-3.5 top-3 w-4 h-4 text-neutral-400" />
               <input
                 type="password"
                 required
-                minLength={6}
+                minLength={authModalTab === 'register' ? 8 : 1}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"

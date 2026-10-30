@@ -223,11 +223,11 @@ export default function ServerConfigScreen({ navigation }) {
 
           <TouchableOpacity
             style={styles.presetItem}
-            onPress={() => applyPreset('http://192.168.137.193:5000/api')}
+            onPress={() => applyPreset('http://10.106.188.195:5000/api')}
           >
             <View>
               <Text style={styles.presetName}>Local Physical Device (Wi-Fi)</Text>
-              <Text style={styles.presetSub}>http://192.168.137.193:5000/api</Text>
+              <Text style={styles.presetSub}>http://10.106.188.195:5000/api</Text>
             </View>
             <Ionicons name="arrow-forward" size={16} color={Colors.secondary} />
           </TouchableOpacity>

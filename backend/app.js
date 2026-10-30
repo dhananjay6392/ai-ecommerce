@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
 const errorMiddleware = require('./middleware/errorMiddleware');
 
 // Route Handlers
@@ -21,9 +22,14 @@ const activityRoutes = require('./routes/activityRoutes');
 const mlRoutes = require('./routes/mlRoutes');
 
 const app = express();
+const connectDB = require('./config/db');
 
 // Security HTTP headers
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 
 // Cookie parser for HTTP-only cookies
 app.use(cookieParser());
@@ -44,7 +50,16 @@ app.use(
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-session-id'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-session-id',
+      'idempotency-key',
+      'x-idempotency-key',
+      'Accept',
+      'X-Requested-With',
+      'Origin',
+    ],
   })
 );
 
@@ -93,10 +108,21 @@ if (process.env.NODE_ENV !== 'test') {
 
 // Health Check API
 app.get('/api/health', (req, res) => {
+  const isDbConnected = mongoose.connection.readyState === 1;
+  const dbInfo = connectDB.getConnectionInfo ? connectDB.getConnectionInfo() : {};
   res.status(200).json({
     success: true,
     status: 'ONLINE',
     service: 'IntelliCart AI Backend REST API',
+    database: isDbConnected ? 'CONNECTED' : 'DISCONNECTED',
+    databaseDetails: {
+      status: isDbConnected ? 'CONNECTED' : 'DISCONNECTED',
+      type: dbInfo.type || (isDbConnected ? 'CONNECTED' : 'NONE'),
+      host: mongoose.connection.host || null,
+      name: mongoose.connection.name || null,
+      fallbackActive: dbInfo.fallbackActive || false,
+      primaryError: dbInfo.primaryDiagnostic || null,
+    },
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
   });
